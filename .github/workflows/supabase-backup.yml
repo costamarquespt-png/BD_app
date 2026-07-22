@@ -1,0 +1,35 @@
+name: Supabase Backup Completo e Diário
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Executa todos os dias à meia-noite (UTC)
+  workflow_dispatch: # Permite executar manualmente
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install PostgreSQL Client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+
+    - name: Run pg_dumpall (Backup Total)
+      env:
+        DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      run: |
+        mkdir -p backups
+        # O comando pg_dump com a flag --clean garante que o ficheiro reconstrói tudo do zero ao restaurar
+        pg_dump "$DB_URL" --clean --inserted-ids -F p -v -f backups/backup-completo-$(date +%Y-%m-%d).sql
+
+    - name: Commit and Push Backup
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@://github.com"
+        git add backups/
+        git commit -m "Backup completo do Banco de Dados: $(date +%Y-%m-%d)" || exit 0
+        git push
