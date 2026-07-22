@@ -21,7 +21,7 @@ jobs:
     - name: Run pg_dumpall (Backup Total)
       env:  
         DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      run: |
+      run: 
         mkdir -p backups
         # O comando pg_dump com a flag --clean garante que o ficheiro reconstrói tudo do zero ao restaurar
         pg_dump "$DB_URL" --clean --inserted-ids -F p -v -f backups/backup-completo-$(date +%Y-%m-%d).sql
